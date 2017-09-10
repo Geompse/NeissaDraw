@@ -6,6 +6,11 @@ import android.view.*;
 import android.graphics.*;
 import android.content.*;
 import java.util.*;
+import android.widget.*;
+import android.net.*;
+import android.util.*;
+import android.graphics.drawable.*;
+import java.io.*;
 
 public class MainActivity extends Activity 
 {
@@ -13,7 +18,36 @@ public class MainActivity extends Activity
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        setContentView(new DrawView(this));
+		FrameLayout layout = new FrameLayout(this);
+		
+		Uri imageUri = getIntent().getParcelableExtra(Intent.EXTRA_STREAM);
+		//imageUri = Uri.parse("content://media/external/images/media/149792");
+		if(imageUri != null)
+		{
+			InputStream inputStream = null;
+			try
+			{
+				inputStream = getContentResolver().openInputStream(imageUri);
+			}
+			catch (FileNotFoundException e)
+			{
+				inputStream = null;
+			}
+
+			Bitmap largeBitmap = inputStream == null ? null : BitmapFactory.decodeStream(inputStream);
+			if(largeBitmap != null)
+			{
+				int nh = (int) ( largeBitmap.getHeight() * (1024.0 / largeBitmap.getWidth()) );
+				Bitmap fitBitmap = Bitmap.createScaledBitmap(largeBitmap, 1024, nh, true);
+				ImageView background = new ImageView(this);
+				background.setImageBitmap(fitBitmap);
+				layout.addView(background,-1,-1);
+			}
+		}
+		
+		DrawView draw = new DrawView(this);
+		layout.addView(draw,-1,-1);
+        setContentView(layout);
     }
 	class DrawView extends View{
 		ArrayList<Float[]> lines = new ArrayList<Float[]>();
@@ -30,6 +64,7 @@ public class MainActivity extends Activity
 		DrawView(Context c)
 		{
 			super(c);
+			//setBackgroundColor(0x80FFFFFF);
 		}
 
 		@Override
